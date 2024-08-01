@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Chat Interface</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        /* Custom styles here */
+        .info-icon {
+            cursor: pointer;
+        }
+
+        .popup {
+            display: none;
+            position: absolute;
+            z-index: 1000;
+            background-color: white;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+    <script>
+        $(document).ready(function () {
+            $('#submit').click(function () {
+                var user_input = $('#user_input').val();
+                $('#user_input').val('');
+
+                // Show loading animation while waiting for the response
+                $('#loading').removeClass('hidden');
+
+                $.ajax({
+                    url: '/chat',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        user_input: user_input
+                    }),
+                    success: function (data) {
+                        // Hide loading animation upon receiving response
+                        $('#loading').addClass('hidden');
+
+                        $('#chat_area').append('<div class="flex justify-end mb-2"><div class="bg-blue-500 text-white p-3 rounded-lg shadow-md max-w-xs md:max-w-md">' + user_input + '</div></div>');
+                        $('#chat_area').append('<div class="flex justify-start mb-2"><div class="bg-white text-black p-3 rounded-lg shadow-md max-w-xs md:max-w-md">' + data.response + '</div></div>');
+
+                        // Auto-scroll to the bottom of the chat area
+                        $('#chat_area').scrollTop($('#chat_area')[0].scrollHeight);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                    }
+                });
+            });
+
+            // Toggle popup visibility
+            $('.info-icon').click(function () {
+                $('.popup').toggle();
+            });
+        });
+    </script>
+</head>
+
+<body class="bg-gray-900 flex justify-center items-center h-screen">
+    <div class="container mx-auto px-4 md:px-8 py-8 bg-gray-800 rounded-lg shadow-xl w-full max-w-screen-lg">
+        <div class="relative">
+            <h2 class="text-2xl lg:text-3xl font-bold text-center mb-4">
+                <span class="text-blue-500">AI Chatbot</span>
+                <span class="info-icon ml-2 text-gray-400">ℹ️</span>
+            </h2>
+            <div class="popup">
+                <p>This is the AI Chatbot where you can chat with an AI. Enter your message in the input box and click
+                    'Send'.</p>
+            </div>
+        </div>
+
+        <!-- Loading Animation -->
+        <div id="loading" class="flex justify-center items-center mb-4 hidden">
+            <div class="lds-ellipsis">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+            <div class="ml-2 text-white">Generating answers...</div>
+        </div>
+
+        <div id="chat_area" class="overflow-y-auto max-h-96 mb-4 p-4 bg-gray-700 rounded-lg shadow-inner">
+            <!-- Chat history will be displayed here -->
+            {% for chat in chat_history %}
+            <div class="flex justify-end mb-2">
+                <div class="bg-blue-500 text-white p-3 rounded-lg shadow-md w-full md:max-w-md">You: {{ chat.user }}
+                </div>
+            </div>
+            <div class="flex justify-start mb-2">
+                <div class="bg-white text-black p-3 rounded-lg shadow-md w-full md:max-w-md">AI: {{ chat.bot }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="flex flex-col md:flex-row items-stretch md:items-center mt-4">
+            <input type="text" id="user_input"
+                class="flex-1 md:flex-auto p-4 rounded-l-lg border-t mb-2 md:mb-0 md:mr-2 focus:outline-none focus:border-blue-500 text-lg lg:text-xl"
+                placeholder="Type here...">
+            <button id="submit"
+                class="p-4 rounded-r-lg bg-blue-500 text-white text-lg lg:text-xl transition duration-300 ease-in-out transform hover:scale-105 md:w-32">Send</button>
+        </div>
+    </div>
+</body>
+
+</html>
